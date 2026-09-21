@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Retro Engine X - NES, SNES, Sony PSX 레트로 에뮬레이터</title>
+    <title>Retro Engine X - NES, SNES, Sony PSX, PSP 레트로 에뮬레이터</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -173,7 +173,7 @@
                     <span>ROM 파일 불러오기</span>
                     <input type="file" id="rom-file-input" accept=".nes,.smc,.sfc,.fig,.iso,.cue,.bin,.pbp,.chd,.gba,.gbc,.gb,.md,.smd,.z64,.zip,.n64,.cso,.pce" class="hidden">
                 </label>
-                <span class="text-[11px] text-slate-400 hidden lg:inline">(.nes, .smc, .iso, .cue, .bin, .gba 등 지원)</span>
+                <span class="text-[11px] text-slate-400 hidden lg:inline">(.nes, .smc, .iso, .cso, .gba 등 지원)</span>
             </div>
 
             <!-- Speed / Fast Forward Control (배속 조절) -->
@@ -218,7 +218,7 @@
                 </div>
                 <h2 class="text-xl md:text-2xl font-bold mb-2 text-white">레트로 게임 에뮬레이터</h2>
                 <p class="text-sm text-slate-400 max-w-md mb-4 leading-relaxed">
-                    BIOS 연결 없이 ROM 파일만으로 바로 실행할 수 있습니다. NES, SNES, PSX, GBA, Gen, N64 등 다양한 게임을 단독으로 플레이해 보세요.
+                    NES, SNES, PSX, PSP, GBA, N64 등의 게임 ROM을 바로 실행하세요.
                 </p>
 
                 <!-- Supported Platform Chips -->
@@ -230,8 +230,6 @@
                     <span class="px-2.5 py-1 rounded-md bg-slate-800 border border-slate-700 text-[10px] text-teal-300 font-semibold">N64</span>
                     <span class="px-2.5 py-1 rounded-md bg-slate-800 border border-slate-700 text-[10px] text-emerald-300 font-semibold">GBA / GBC</span>
                     <span class="px-2.5 py-1 rounded-md bg-slate-800 border border-slate-700 text-[10px] text-amber-300 font-semibold">Sega Genesis</span>
-                    <span class="px-2.5 py-1 rounded-md bg-slate-800 border border-slate-700 text-[10px] text-rose-300 font-semibold">PCEngine</span>
-                    <span class="px-2.5 py-1 rounded-md bg-slate-800 border border-slate-700 text-[10px] text-fuchsia-300 font-semibold">Arcade</span>
                 </div>
 
                 <!-- Demo Game Loader Buttons -->
@@ -242,14 +240,14 @@
                     </button>
                     <button id="btn-demo-snes" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium flex items-center gap-2 transition-all hover:scale-105 text-slate-200">
                         <span class="w-2 h-2 rounded-full bg-purple-500"></span>
-                        SNES ROM 업로드 가이드
+                        ROM 업로드 가이드
                     </button>
                 </div>
 
                 <!-- Drag & Drop Overlay Zone -->
                 <div id="drop-zone" class="mt-6 w-full max-w-lg p-6 rounded-2xl border-2 border-dashed border-slate-700 bg-slate-900/40 hover:border-violet-500/60 transition-all flex flex-col items-center gap-2 cursor-pointer">
                     <i class="fa-solid fa-cloud-arrow-up text-2xl text-slate-500"></i>
-                    <p class="text-xs text-slate-400">여기에 ROM 파일(.nes, .smc, .iso, .z64, .gba 등)을 끌어다 놓으세요</p>
+                    <p class="text-xs text-slate-400">여기에 ROM 파일(.nes, .smc, .iso, .cso, .gba 등)을 끌어다 놓으세요</p>
                 </div>
             </div>
 
@@ -259,30 +257,30 @@
             </div>
 
             <!-- Mobile Virtual Touch Controller Overlay -->
-            <div id="virtual-controller-overlay" class="absolute inset-0 z-30 pointer-events-none hidden flex flex-col justify-between p-4 md:p-6">
+            <div id="virtual-controller-overlay" class="absolute inset-0 z-30 pointer-events-none hidden flex flex-col justify-between p-3 md:p-6 select-none">
                 <!-- Top Bumpers & Utility Touch Row -->
-                <div class="flex justify-between items-center w-full pointer-events-auto">
+                <div class="flex justify-between items-center w-full pointer-events-auto gap-2">
                     <!-- L1 / L2 Bumpers -->
-                    <div class="flex gap-2">
-                        <button data-key="KeyQ" class="v-btn w-14 h-10 rounded-lg text-xs font-bold text-slate-200 flex items-center justify-center">L1</button>
-                        <button data-key="KeyW" class="v-btn w-14 h-10 rounded-lg text-xs font-bold text-slate-200 flex items-center justify-center">L2</button>
+                    <div class="flex gap-1.5">
+                        <button data-key="KeyQ" class="v-btn w-12 h-9 md:w-14 md:h-10 rounded-lg text-xs font-bold text-slate-200 flex items-center justify-center">L1</button>
+                        <button data-key="KeyW" class="v-btn w-12 h-9 md:w-14 md:h-10 rounded-lg text-xs font-bold text-slate-200 flex items-center justify-center">L2</button>
                     </div>
 
                     <!-- Center Select / Start Buttons -->
-                    <div class="flex gap-3">
-                        <button data-key="ShiftRight" class="v-btn px-3 h-8 rounded-full text-[11px] font-semibold text-slate-300">SELECT</button>
-                        <button data-key="Enter" class="v-btn px-4 h-8 rounded-full text-[11px] font-bold text-violet-300 border-violet-500/40">START</button>
+                    <div class="flex gap-2">
+                        <button data-key="ShiftRight" class="v-btn px-3 h-8 rounded-full text-[11px] font-bold text-slate-200 bg-slate-800/80 border-slate-600 active:scale-95">SELECT</button>
+                        <button data-key="Enter" class="v-btn px-4 h-8 rounded-full text-[11px] font-bold text-violet-300 border-violet-500/60 bg-violet-950/60 active:scale-95">START</button>
                     </div>
 
                     <!-- R1 / R2 Bumpers -->
-                    <div class="flex gap-2">
-                        <button data-key="KeyE" class="v-btn w-14 h-10 rounded-lg text-xs font-bold text-slate-200 flex items-center justify-center">R2</button>
-                        <button data-key="KeyR" class="v-btn w-14 h-10 rounded-lg text-xs font-bold text-slate-200 flex items-center justify-center">R1</button>
+                    <div class="flex gap-1.5">
+                        <button data-key="KeyE" class="v-btn w-12 h-9 md:w-14 md:h-10 rounded-lg text-xs font-bold text-slate-200 flex items-center justify-center">R2</button>
+                        <button data-key="KeyR" class="v-btn w-12 h-9 md:w-14 md:h-10 rounded-lg text-xs font-bold text-slate-200 flex items-center justify-center">R1</button>
                     </div>
                 </div>
 
                 <!-- Bottom Controls: D-Pad Left & Action ABXY Right -->
-                <div class="flex justify-between items-end w-full pb-2 pointer-events-auto">
+                <div class="flex justify-between items-end w-full pb-1 pointer-events-auto">
                     
                     <!-- Directional D-Pad Layout -->
                     <div class="relative w-36 h-36">
@@ -334,10 +332,42 @@
         </div>
     </main>
 
+    <!-- GTA SA & Network Error Info Modal -->
+    <div id="modal-gta-notice" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-lg rounded-2xl border border-amber-500/40 shadow-2xl flex flex-col overflow-hidden">
+            <div class="p-4 border-b border-slate-800 bg-amber-500/10 flex items-center justify-between">
+                <div class="flex items-center gap-2 text-amber-400">
+                    <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+                    <h3 class="font-bold text-white text-base">GTA 산 안드레스 / 고용량 3D 게임 실행 가이드</h3>
+                </div>
+                <button class="btn-close-modal text-slate-400 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            <div class="p-5 space-y-3 text-xs leading-relaxed text-slate-300">
+                <p><strong class="text-white">웹 브라우저 에뮬레이터 한계 안내:</strong></p>
+                <p>GTA: San Andreas는 주로 <span class="text-amber-400 font-semibold">PS2 (또는 PC / Android)</span> 게임으로 용량이 약 3.5GB ~ 4.7GB에 달합니다. 웹 에뮬레이터에서 실행 시 네트워크 에러가 뜨는 원인은 아래와 같습니다:</p>
+                <ul class="list-disc pl-5 space-y-1.5 text-slate-400">
+                    <li><strong class="text-slate-200">CORS/스레드 보안 차단:</strong> PS2 코어가 웹 서버의 SharedArrayBuffer 보안 헤더 부재로 인해 코어 WASM 다운로드를 실패합니다.</li>
+                    <li><strong class="text-slate-200">브라우저 메모리 오버플로우:</strong> 1GB 이상의 ISO 파일을 브라우저 탭 단일 메모리에 올릴 경우 네트워크 타임아웃이나 메모리 할당 실패(OOM)가 발생합니다.</li>
+                </ul>
+                <div class="p-3 bg-slate-900 rounded-xl border border-slate-800 text-[11px] text-slate-300">
+                    💡 <strong>권장 해결책:</strong><br>
+                    1. 2D 레트로 게임(NES, SNES, GBA, PS1) 및 1GB 이하 PSP 게임 실행에 가장 적합합니다.<br>
+                    2. GTA SA 같은 PS2 게임은 PC용 <strong>PCSX2</strong> 에뮬레이터나 전용 앱을 이용하시는 것을 권장합니다.
+                </div>
+            </div>
+            <div class="p-3 border-t border-slate-800 bg-slate-900/50 text-right">
+                <button class="btn-close-modal px-4 py-2 bg-amber-600 hover:bg-amber-500 text-white rounded-xl font-medium text-xs transition-all">
+                    확인했습니다
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Key Mapping Modal -->
     <div id="modal-keymapping" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="glass-panel w-full max-w-xl rounded-2xl border border-slate-700 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
-            <!-- Modal Header -->
             <div class="p-4 border-b border-slate-800 flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-keyboard text-amber-400"></i>
@@ -347,15 +377,10 @@
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
-            <!-- Modal Body / Key Grid -->
             <div class="p-4 overflow-y-auto space-y-4">
                 <p class="text-xs text-slate-400">변경하고 싶은 버튼의 키를 클릭한 후, 사용할 키보드 자판을 누르면 바뀝니다.</p>
-                
-                <div id="keymap-grid" class="grid grid-cols-2 gap-3">
-                    <!-- Dynamic Key Mapping Input Rows inserted via JS -->
-                </div>
+                <div id="keymap-grid" class="grid grid-cols-2 gap-3"></div>
             </div>
-            <!-- Modal Footer -->
             <div class="p-3 border-t border-slate-800 bg-slate-900/50 flex justify-between items-center text-xs">
                 <button id="btn-reset-keymap" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 font-medium transition-all">
                     기본값으로 복원
@@ -370,7 +395,6 @@
     <!-- ROM Library Modal -->
     <div id="modal-library" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="glass-panel w-full max-w-xl rounded-2xl border border-slate-700 shadow-2xl flex flex-col max-h-[85vh] overflow-hidden">
-            <!-- Modal Header -->
             <div class="p-4 border-b border-slate-800 flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-folder-open text-violet-400"></i>
@@ -380,13 +404,9 @@
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
-            <!-- Modal Body -->
             <div class="p-4 flex-1 overflow-y-auto space-y-3 text-xs">
-                <div id="library-file-list" class="space-y-2">
-                    <!-- Dynamically populated from IndexedDB -->
-                </div>
+                <div id="library-file-list" class="space-y-2"></div>
             </div>
-            <!-- Modal Footer -->
             <div class="p-3 border-t border-slate-800 bg-slate-900/50 flex justify-between items-center text-xs">
                 <span id="library-count-text" class="text-slate-400">저장된 ROM: 0개</span>
                 <div class="flex gap-2">
@@ -404,7 +424,6 @@
     <!-- Settings Modal -->
     <div id="modal-settings" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="glass-panel w-full max-w-lg rounded-2xl border border-slate-700 shadow-2xl flex flex-col">
-            <!-- Settings Header -->
             <div class="p-4 border-b border-slate-800 flex items-center justify-between">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-gear text-violet-400"></i>
@@ -414,9 +433,7 @@
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
-            <!-- Settings Options -->
             <div class="p-5 space-y-4 text-xs">
-                <!-- Virtual Pad Opacity -->
                 <div class="flex flex-col gap-2">
                     <div class="flex justify-between text-slate-300">
                         <span>가상 게임패드 투명도</span>
@@ -424,20 +441,11 @@
                     </div>
                     <input type="range" id="setting-pad-opacity" min="0.2" max="1.0" step="0.1" value="0.8" class="w-full accent-violet-500 cursor-pointer">
                 </div>
-
-                <!-- Touch Vibration -->
                 <div class="flex items-center justify-between py-2 border-t border-slate-800">
                     <span class="text-slate-300">터치 진동 피드백 (Haptics)</span>
                     <input type="checkbox" id="setting-vibration" checked class="w-4 h-4 accent-violet-500 rounded cursor-pointer">
                 </div>
-
-                <!-- Smooth Graphics Interpolation -->
-                <div class="flex items-center justify-between py-2 border-t border-slate-800">
-                    <span class="text-slate-300">그래픽 픽셀 스무딩 (Bilinear)</span>
-                    <input type="checkbox" id="setting-smoothing" checked class="w-4 h-4 accent-violet-500 rounded cursor-pointer">
-                </div>
             </div>
-            <!-- Settings Footer -->
             <div class="p-3 border-t border-slate-800 bg-slate-900/50 text-right">
                 <button class="btn-close-modal px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-xl font-medium text-xs transition-all">
                     확인
@@ -448,7 +456,7 @@
 
     <!-- Footer -->
     <footer class="py-3 px-4 text-center text-slate-500 text-[11px] border-t border-slate-900">
-        Retro Engine X • NES, SNES, Sony PSX, GBA 에뮬레이터 • 모든 처리 및 ROM 실행은 사용자의 브라우저 내에서 안전하게 구동됩니다.
+        Retro Engine X • NES, SNES, Sony PSX, PSP, GBA 에뮬레이터 • 웹 브라우저 단독 구동
     </footer>
 
     <script>
@@ -456,122 +464,195 @@
          * RETRO ENGINE X - MAIN APPLICATION CORE
          */
 
-        // Safe Mock for WakeLock API in restricted iFrame / Sandbox environments
-        if (typeof navigator !== 'undefined' && navigator.wakeLock) {
-            try {
-                const dummySentinel = {
-                    released: false,
-                    type: 'screen',
-                    release: async () => {},
-                    addEventListener: () => {},
-                    removeEventListener: () => {},
-                    dispatchEvent: () => true
-                };
-                navigator.wakeLock.request = async function() {
-                    return dummySentinel;
-                };
-            } catch (e) {
-                // Ignore if property is read-only in strict environments
-            }
-        }
+        const defaultKeyMap = {
+            'ArrowUp': '상 (Up)',
+            'ArrowDown': '하 (Down)',
+            'ArrowLeft': '좌 (Left)',
+            'ArrowRight': '우 (Right)',
+            'KeyX': 'A 버튼',
+            'KeyZ': 'B 버튼',
+            'KeyA': 'Y 버튼',
+            'KeyS': 'X 버튼',
+            'ShiftRight': 'SELECT',
+            'Enter': 'START',
+            'KeyQ': 'L1',
+            'KeyW': 'L2',
+            'KeyE': 'R2',
+            'KeyR': 'R1'
+        };
 
-        window.addEventListener('unhandledrejection', (event) => {
-            const reasonStr = String(event.reason?.message || event.reason || '').toLowerCase();
-            if (
-                event.reason?.name === 'NotAllowedError' || 
-                reasonStr.includes('wake lock') || 
-                reasonStr.includes('wakelock')
-            ) {
-                event.preventDefault();
-            }
-        });
-
-        // App State Container
         const AppState = {
+            db: null,
             currentRomBlob: null,
             currentRomName: '',
-            currentCore: 'nes',
+            currentCore: '',
             currentSpeed: 1.0,
             mobileControlsActive: false,
             vibrationEnabled: true,
-            padOpacity: 0.8,
-            db: null,
             listeningForKey: null,
-            keyMap: {
-                'ArrowUp': '방향키 상 (Up)',
-                'ArrowDown': '방향키 하 (Down)',
-                'ArrowLeft': '방향키 좌 (Left)',
-                'ArrowRight': '방향키 우 (Right)',
-                'KeyX': 'A 버튼',
-                'KeyZ': 'B 버튼',
-                'KeyS': 'X 버튼',
-                'KeyA': 'Y 버튼',
-                'KeyQ': 'L1 버튼',
-                'KeyW': 'L2 버튼',
-                'KeyR': 'R1 버튼',
-                'KeyE': 'R2 버튼',
-                'ShiftRight': 'Select',
-                'Enter': 'Start'
-            }
+            emulatorReady: false,
+            emulatorInstance: null,
+            keyMap: { ...defaultKeyMap }
         };
 
-        // Custom Default Key Map Definitions
-        const defaultKeyMap = { ...AppState.keyMap };
-
-        // Helper: Toast Notifications
         function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container');
             if (!container) return;
-
             const toast = document.createElement('div');
-            const bgClass = type === 'error' ? 'bg-red-600/90 border-red-500' : 
-                            type === 'success' ? 'bg-emerald-600/90 border-emerald-500' : 
-                            'bg-violet-600/90 border-violet-500';
-
-            toast.className = `${bgClass} text-white px-4 py-2.5 rounded-xl border text-xs font-medium shadow-xl backdrop-blur-md pointer-events-auto flex items-center gap-2 transition-all duration-300 opacity-0 transform translate-y-2`;
-            
-            const icon = type === 'error' ? 'fa-circle-exclamation' : type === 'success' ? 'fa-circle-check' : 'fa-circle-info';
-            toast.innerHTML = `<i class="fa-solid ${icon}"></i><span>${message}</span>`;
-
+            const bg = type === 'error' ? 'bg-red-900/90 border-red-500 text-red-200' :
+                       type === 'success' ? 'bg-emerald-900/90 border-emerald-500 text-emerald-200' :
+                       'bg-slate-800/90 border-violet-500 text-slate-200';
+            toast.className = `px-4 py-2.5 rounded-xl border text-xs shadow-lg backdrop-blur-md flex items-center gap-2 transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto ${bg}`;
+            toast.innerHTML = `<i class="fa-solid ${type === 'error' ? 'fa-circle-exclamation text-red-400' : type === 'success' ? 'fa-circle-check text-emerald-400' : 'fa-circle-info text-violet-400'}"></i> <span>${message}</span>`;
             container.appendChild(toast);
-
-            setTimeout(() => {
-                toast.classList.remove('opacity-0', 'translate-y-2');
-            }, 10);
-
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
             setTimeout(() => {
                 toast.classList.add('opacity-0', 'translate-y-2');
                 setTimeout(() => toast.remove(), 300);
-            }, 3500);
+            }, 3000);
         }
 
-        // Automatic Core Detection based on File Extension
         function detectCore(fileName) {
             const ext = fileName.split('.').pop().toLowerCase();
             switch (ext) {
                 case 'nes': return 'nes';
                 case 'smc': case 'sfc': case 'fig': return 'snes';
                 case 'iso': case 'cue': case 'bin': case 'pbp': case 'chd': return 'psx';
-                case 'gba': return 'gba';
-                case 'gb': case 'gbc': return 'gbc';
-                case 'md': case 'smd': case 'gen': return 'segaMD';
-                case 'z64': case 'n64': case 'v64': return 'n64';
                 case 'cso': return 'psp';
+                case 'gba': return 'gba';
+                case 'gbc': return 'gbc';
+                case 'gb': return 'gb';
+                case 'z64': case 'n64': return 'n64';
+                case 'md': case 'smd': case 'gen': return 'segaMD';
                 case 'pce': return 'pce';
-                case 'sms': case 'gg': return 'sms';
-                case 'zip': return 'arcade';
                 default: return 'nes';
             }
         }
 
-        // Initialize IndexedDB for ROM Storage
+        // Key details map for standard RetroArch / EmulatorJS keyboard inputs
+        const keyDetailsMap = {
+            'ShiftRight': { key: 'Shift', code: 'ShiftRight', keyCode: 16, location: 2 },
+            'ShiftLeft': { key: 'Shift', code: 'ShiftLeft', keyCode: 16, location: 1 },
+            'Enter': { key: 'Enter', code: 'Enter', keyCode: 13, location: 0 },
+            'Space': { key: ' ', code: 'Space', keyCode: 32, location: 0 },
+            'ArrowUp': { key: 'ArrowUp', code: 'ArrowUp', keyCode: 38, location: 0 },
+            'ArrowDown': { key: 'ArrowDown', code: 'ArrowDown', keyCode: 40, location: 0 },
+            'ArrowLeft': { key: 'ArrowLeft', code: 'ArrowLeft', keyCode: 37, location: 0 },
+            'ArrowRight': { key: 'ArrowRight', code: 'ArrowRight', keyCode: 39, location: 0 },
+            'KeyZ': { key: 'z', code: 'KeyZ', keyCode: 90, location: 0 },
+            'KeyX': { key: 'x', code: 'KeyX', keyCode: 88, location: 0 },
+            'KeyA': { key: 'a', code: 'KeyA', keyCode: 65, location: 0 },
+            'KeyS': { key: 's', code: 'KeyS', keyCode: 83, location: 0 },
+            'KeyQ': { key: 'q', code: 'KeyQ', keyCode: 81, location: 0 },
+            'KeyW': { key: 'w', code: 'KeyW', keyCode: 87, location: 0 },
+            'KeyE': { key: 'e', code: 'KeyE', keyCode: 69, location: 0 },
+            'KeyR': { key: 'r', code: 'KeyR', keyCode: 82, location: 0 }
+        };
+
+        // Dispatch robust synthetic key events directly to iframe and game canvas
+        function dispatchSyntheticKey(code, type) {
+            const details = keyDetailsMap[code] || { key: code, code: code, keyCode: 0, location: 0 };
+            
+            const iframe = document.querySelector('#emulator-container iframe');
+            const targetWin = (iframe && iframe.contentWindow) ? iframe.contentWindow : window;
+            const targetDoc = (iframe && iframe.contentDocument) ? iframe.contentDocument : document;
+            
+            if (iframe && iframe.contentWindow) {
+                try { iframe.contentWindow.focus(); } catch(e) {}
+            }
+
+            const evtInit = {
+                key: details.key,
+                code: details.code,
+                keyCode: details.keyCode,
+                which: details.keyCode,
+                location: details.location,
+                bubbles: true,
+                cancelable: true,
+                composed: true
+            };
+
+            const event = new KeyboardEvent(type, evtInit);
+            Object.defineProperty(event, 'keyCode', { get: () => details.keyCode });
+            Object.defineProperty(event, 'which', { get: () => details.keyCode });
+
+            // Dispatch across all potential target listener layers
+            targetDoc.dispatchEvent(event);
+            targetWin.dispatchEvent(event);
+            document.dispatchEvent(event);
+            window.dispatchEvent(event);
+
+            const activeCanvas = targetDoc.querySelector('canvas');
+            if (activeCanvas) {
+                activeCanvas.dispatchEvent(event);
+            }
+        }
+
+        // Virtual Touch Gamepad Logic
+        function setupVirtualGamepad() {
+            const overlay = document.getElementById('virtual-controller-overlay');
+            if (!overlay) return;
+
+            document.querySelectorAll('.v-btn').forEach(btn => {
+                const keyCode = btn.getAttribute('data-key');
+                if (!keyCode) return;
+
+                const press = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    btn.classList.add('active');
+                    if (AppState.vibrationEnabled && navigator.vibrate) {
+                        try { navigator.vibrate(12); } catch(err) {}
+                    }
+                    dispatchSyntheticKey(keyCode, 'keydown');
+
+                    // Secondary fallback dispatch for SELECT button (ShiftRight / ShiftLeft / Space)
+                    if (keyCode === 'ShiftRight') {
+                        dispatchSyntheticKey('ShiftLeft', 'keydown');
+                        dispatchSyntheticKey('Space', 'keydown');
+                    }
+                };
+
+                const release = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    btn.classList.remove('active');
+                    dispatchSyntheticKey(keyCode, 'keyup');
+
+                    if (keyCode === 'ShiftRight') {
+                        dispatchSyntheticKey('ShiftLeft', 'keyup');
+                        dispatchSyntheticKey('Space', 'keyup');
+                    }
+                };
+
+                btn.addEventListener('touchstart', press, { passive: false });
+                btn.addEventListener('touchend', release, { passive: false });
+                btn.addEventListener('touchcancel', release, { passive: false });
+                btn.addEventListener('mousedown', press);
+                btn.addEventListener('mouseup', release);
+                btn.addEventListener('mouseleave', release);
+            });
+
+            // Auto-enable virtual gamepad on mobile/touch screens
+            if ('ontouchstart' in window || navigator.maxTouchPoints > 0 || window.innerWidth <= 768) {
+                AppState.mobileControlsActive = true;
+                overlay.classList.remove('hidden');
+            }
+        }
+
+        // Initialize IndexedDB
         function initDB() {
             return new Promise((resolve, reject) => {
-                const request = indexedDB.open('RetroEngineDB', 2);
+                const request = indexedDB.open('RetroEngineDB', 3);
                 request.onupgradeneeded = (e) => {
                     const db = e.target.result;
                     if (!db.objectStoreNames.contains('roms')) {
                         db.createObjectStore('roms', { keyPath: 'id', autoIncrement: true });
+                    }
+                    if (!db.objectStoreNames.contains('save_states')) {
+                        db.createObjectStore('save_states', { keyPath: 'id', autoIncrement: true });
                     }
                 };
                 request.onsuccess = (e) => {
@@ -582,9 +663,128 @@
             });
         }
 
-        // Save ROM to IndexedDB
+        // Save state to IndexedDB
+        function saveStateToDB(romName, stateData) {
+            return new Promise((resolve, reject) => {
+                if (!AppState.db) return reject(new Error('DB not initialized'));
+                const tx = AppState.db.transaction(['save_states'], 'readwrite');
+                const store = tx.objectStore('save_states');
+                const record = {
+                    romName: romName || 'unknown',
+                    data: stateData,
+                    date: new Date().toLocaleString('ko-KR')
+                };
+                const req = store.add(record);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = (e) => reject(e);
+            });
+        }
+
+        function getLatestSaveStateFromDB(romName) {
+            return new Promise((resolve) => {
+                if (!AppState.db) return resolve(null);
+                const tx = AppState.db.transaction(['save_states'], 'readonly');
+                const store = tx.objectStore('save_states');
+                const req = store.getAll();
+                req.onsuccess = () => {
+                    const results = req.result || [];
+                    const filtered = results.filter(r => r.romName === romName);
+                    if (filtered.length === 0) {
+                        resolve(results.length > 0 ? results[results.length - 1] : null);
+                    } else {
+                        resolve(filtered[filtered.length - 1]);
+                    }
+                };
+                req.onerror = () => resolve(null);
+            });
+        }
+
+        // Apply Speed multiplier dynamically
+        function applySpeed(speed) {
+            AppState.currentSpeed = speed;
+            const emu = window.EJS_emulator || AppState.emulatorInstance;
+            if (emu) {
+                try {
+                    if (typeof emu.setSpeed === 'function') {
+                        emu.setSpeed(speed);
+                    } else if (emu.gameManager && typeof emu.gameManager.setSpeed === 'function') {
+                        emu.gameManager.setSpeed(speed);
+                    } else if (emu.elements && emu.elements.gameManager && typeof emu.elements.gameManager.setSpeed === 'function') {
+                        emu.elements.gameManager.setSpeed(speed);
+                    }
+                } catch(err) {
+                    console.warn('Speed adjust warning:', err);
+                }
+            }
+        }
+
+        // Save Game State handler
+        async function saveGameState() {
+            const emu = window.EJS_emulator || AppState.emulatorInstance;
+            if (!emu && !window.EJS_player) {
+                showToast('게임을 구동한 후 저장을 진행해 주세요.', 'error');
+                return;
+            }
+
+            try {
+                let stateData = null;
+                if (emu && typeof emu.saveState === 'function') {
+                    stateData = await emu.saveState();
+                } else if (emu && emu.gameManager && typeof emu.gameManager.getState === 'function') {
+                    stateData = await emu.gameManager.getState();
+                }
+
+                if (stateData) {
+                    await saveStateToDB(AppState.currentRomName, stateData);
+                    showToast('진행 상태가 보관함에 성공적으로 저장되었습니다!', 'success');
+                } else if (emu && typeof emu.saveState === 'function') {
+                    emu.saveState();
+                    showToast('상태 저장 명령을 실행했습니다.', 'info');
+                } else {
+                    showToast('이 코어에서는 빠른 저장을 지원하지 않거나 게임 준비 중입니다.', 'error');
+                }
+            } catch (err) {
+                console.error('Save state error:', err);
+                showToast('상태 저장 처리 중 알 수 없는 오류가 발생했습니다.', 'error');
+            }
+        }
+
+        // Load Game State handler
+        async function loadGameState() {
+            const emu = window.EJS_emulator || AppState.emulatorInstance;
+            if (!emu && !window.EJS_player) {
+                showToast('게임을 구동한 후 복원을 진행해 주세요.', 'error');
+                return;
+            }
+
+            try {
+                const savedRecord = await getLatestSaveStateFromDB(AppState.currentRomName);
+                if (savedRecord && savedRecord.data) {
+                    if (emu && typeof emu.loadState === 'function') {
+                        await emu.loadState(savedRecord.data);
+                    } else if (emu && emu.gameManager && typeof emu.gameManager.loadState === 'function') {
+                        await emu.gameManager.loadState(savedRecord.data);
+                    }
+                    showToast(`[${savedRecord.date}] 저장 지점으로 복원되었습니다!`, 'success');
+                } else if (emu && typeof emu.loadState === 'function') {
+                    emu.loadState();
+                    showToast('상태 불러오기 명령을 실행했습니다.', 'info');
+                } else {
+                    showToast('저장된 진행 상태를 찾을 수 없습니다.', 'error');
+                }
+            } catch (err) {
+                console.error('Load state error:', err);
+                showToast('상태 불러오기 처리 중 오류가 발생했습니다.', 'error');
+            }
+        }
+
+        // Save ROM to IndexedDB (Skips multi-gigabyte files to avoid DB quota overflow)
         async function saveRomToDB(fileName, blob, core) {
             if (!AppState.db) return;
+            if (blob.size > 800 * 1024 * 1024) {
+                showToast('대용량 ROM(800MB 이상)은 보관함 저장을 건너뛰고 바로 실행합니다.', 'info');
+                return;
+            }
             const transaction = AppState.db.transaction(['roms'], 'readwrite');
             const store = transaction.objectStore('roms');
             const record = {
@@ -595,12 +795,11 @@
             };
             store.add(record);
             transaction.oncomplete = () => {
-                showToast(`'${fileName}' 파일이 내 보관함에 저장되었습니다.`, 'success');
+                showToast(`'${fileName}' 보관함 저장 완료`, 'success');
                 refreshLibraryList();
             };
         }
 
-        // Load Stored ROMs
         function getStoredRoms() {
             return new Promise((resolve) => {
                 if (!AppState.db) return resolve([]);
@@ -612,19 +811,16 @@
             });
         }
 
-        // Delete ROM from IndexedDB
         async function deleteRomFromDB(id) {
             if (!AppState.db) return;
             const transaction = AppState.db.transaction(['roms'], 'readwrite');
-            const store = transaction.objectStore('roms');
-            store.delete(id);
+            transaction.objectStore('roms').delete(id);
             transaction.oncomplete = () => {
-                showToast('ROM 파일이 보관함에서 삭제되었습니다.', 'info');
+                showToast('ROM 파일 삭제 완료', 'info');
                 refreshLibraryList();
             };
         }
 
-        // Refresh ROM Library Modal List
         async function refreshLibraryList() {
             const listEl = document.getElementById('library-file-list');
             if (!listEl) return;
@@ -654,7 +850,6 @@
             `).join('');
         }
 
-        // Play ROM directly from IndexedDB
         async function playStoredRom(id) {
             const items = await getStoredRoms();
             const found = items.find(i => i.id === id);
@@ -664,8 +859,12 @@
             }
         }
 
-        // Launch EmulatorJS Core
+        // Launch EmulatorJS Core with CORS & Thread Safety options
         function launchEmulator(blob, fileName, core) {
+            if (blob.size > 1000 * 1024 * 1024 || fileName.toLowerCase().includes('san andreas')) {
+                document.getElementById('modal-gta-notice').classList.remove('hidden');
+            }
+
             const welcomeScreen = document.getElementById('welcome-screen');
             if (welcomeScreen) welcomeScreen.style.display = 'none';
 
@@ -676,86 +875,48 @@
             AppState.currentRomBlob = blob;
             AppState.currentRomName = fileName;
             AppState.currentCore = core;
+            AppState.emulatorReady = false;
 
-            // Update UI Console Info
             document.getElementById('active-game-info').classList.remove('hidden');
             document.getElementById('console-badge').textContent = core.toUpperCase();
             document.getElementById('game-title-text').textContent = fileName;
 
-            // Configure EmulatorJS Globals
+            // Configure EmulatorJS Globals & Ready Callback
             window.EJS_player = '#game-player';
             window.EJS_core = core;
             window.EJS_gameName = fileName;
             window.EJS_color = '#7c3aed';
             window.EJS_startOnLoaded = true;
+            window.EJS_threads = false;
             window.EJS_screenWakeLock = false;
             window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
             window.EJS_gameUrl = blobUrl;
 
-            // Remove previous script if existing
-            const oldScript = document.getElementById('ejs-loader-script');
-            if (oldScript) oldScript.remove();
-
-            // Load EJS Loader Script
-            const script = document.createElement('script');
-            script.id = 'ejs-loader-script';
-            script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
-            document.body.appendChild(script);
-
-            showToast(`${core.toUpperCase()} 게임 '${fileName}' 구동을 시작합니다.`, 'success');
-        }
-
-        // Virtual Touch Gamepad Logic
-        function setupVirtualGamepad() {
-            const overlay = document.getElementById('virtual-controller-overlay');
-            if (!overlay) return;
-
-            const sendKeyEvent = (code, type) => {
-                const event = new KeyboardEvent(type, {
-                    code: code,
-                    key: code,
-                    bubbles: true,
-                    cancelable: true
-                });
-                document.dispatchEvent(event);
-
-                // Target iframe if present
-                const iframe = document.querySelector('#emulator-container iframe');
-                if (iframe && iframe.contentWindow) {
-                    try {
-                        iframe.contentWindow.dispatchEvent(event);
-                    } catch(e) {}
+            window.EJS_onReady = function() {
+                AppState.emulatorReady = true;
+                AppState.emulatorInstance = window.EJS_emulator;
+                showToast('게임 코어가 정상적으로 준비되었습니다.', 'success');
+                
+                if (AppState.currentSpeed !== 1.0) {
+                    applySpeed(AppState.currentSpeed);
                 }
             };
 
-            document.querySelectorAll('.v-btn').forEach(btn => {
-                const keyCode = btn.getAttribute('data-key');
-                if (!keyCode) return;
+            const oldScript = document.getElementById('ejs-loader-script');
+            if (oldScript) oldScript.remove();
 
-                const press = (e) => {
-                    e.preventDefault();
-                    btn.classList.add('active');
-                    if (AppState.vibrationEnabled && navigator.vibrate) {
-                        navigator.vibrate(15);
-                    }
-                    sendKeyEvent(keyCode, 'keydown');
-                };
+            const script = document.createElement('script');
+            script.id = 'ejs-loader-script';
+            script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
+            script.onerror = () => {
+                showToast('에뮬레이터 코어 다운로드 중 네트워크 에러가 발생했습니다.', 'error');
+                document.getElementById('modal-gta-notice').classList.remove('hidden');
+            };
+            document.body.appendChild(script);
 
-                const release = (e) => {
-                    e.preventDefault();
-                    btn.classList.remove('active');
-                    sendKeyEvent(keyCode, 'keyup');
-                };
-
-                btn.addEventListener('touchstart', press, { passive: false });
-                btn.addEventListener('touchend', release, { passive: false });
-                btn.addEventListener('mousedown', press);
-                btn.addEventListener('mouseup', release);
-                btn.addEventListener('mouseleave', release);
-            });
+            showToast(`${core.toUpperCase()} 게임 '${fileName}' 구동 준비 중...`, 'info');
         }
 
-        // Check Connected Physical Gamepads
         function checkGamepadConnection() {
             const updateStatus = () => {
                 const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
@@ -779,7 +940,6 @@
             setInterval(updateStatus, 2000);
         }
 
-        // Render Key Mapping Grid
         function renderKeymapGrid() {
             const grid = document.getElementById('keymap-grid');
             if (!grid) return;
@@ -803,7 +963,6 @@
             });
         }
 
-        // Update Keybindings Header Info Bar
         function updateActiveKeybindingsUI() {
             const display = document.getElementById('active-keybindings-display');
             if (!display) return;
@@ -815,9 +974,7 @@
             `;
         }
 
-        // Attach Event Listeners
         function setupEventListeners() {
-            // Key capture during key mapping binding
             document.addEventListener('keydown', (e) => {
                 if (AppState.listeningForKey) {
                     e.preventDefault();
@@ -834,7 +991,6 @@
                 }
             });
 
-            // ROM File Upload
             const romInput = document.getElementById('rom-file-input');
             if (romInput) {
                 romInput.addEventListener('change', (e) => {
@@ -846,7 +1002,6 @@
                 });
             }
 
-            // Drag & Drop Handling
             const dropZone = document.getElementById('drop-zone');
             if (dropZone) {
                 dropZone.addEventListener('dragover', (e) => {
@@ -868,7 +1023,6 @@
                 });
             }
 
-            // Speed Control Buttons
             document.querySelectorAll('.speed-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     document.querySelectorAll('.speed-btn').forEach(b => {
@@ -879,15 +1033,11 @@
                     btn.classList.remove('text-slate-400');
 
                     const speed = parseFloat(btn.getAttribute('data-speed'));
-                    AppState.currentSpeed = speed;
-                    if (window.EJS_emulator) {
-                        try { window.EJS_emulator.setSpeed(speed); } catch(e) {}
-                    }
+                    applySpeed(speed);
                     showToast(`속도 ${speed}x 로 변경되었습니다.`, 'info');
                 });
             });
 
-            // Action Buttons
             document.getElementById('btn-fullscreen')?.addEventListener('click', () => {
                 const elem = document.getElementById('emulator-viewport-wrapper');
                 if (!document.fullscreenElement) {
@@ -904,32 +1054,13 @@
             });
 
             document.getElementById('btn-save-state')?.addEventListener('click', () => {
-                if (window.EJS_emulator) {
-                    try {
-                        window.EJS_emulator.saveState();
-                        showToast('현재 진행 상태를 저장했습니다.', 'success');
-                    } catch(e) {
-                        showToast('저장 기능을 실행할 수 없습니다.', 'error');
-                    }
-                } else {
-                    showToast('게임 구동 중일 때만 저장이 가능합니다.', 'error');
-                }
+                saveGameState();
             });
 
             document.getElementById('btn-load-state')?.addEventListener('click', () => {
-                if (window.EJS_emulator) {
-                    try {
-                        window.EJS_emulator.loadState();
-                        showToast('저장된 상태를 불러왔습니다.', 'success');
-                    } catch(e) {
-                        showToast('불러오기를 실행할 수 없습니다.', 'error');
-                    }
-                } else {
-                    showToast('게임 구동 중일 때만 복원이 가능합니다.', 'error');
-                }
+                loadGameState();
             });
 
-            // Mobile Controller Toggle
             document.getElementById('btn-toggle-mobile')?.addEventListener('click', () => {
                 const overlay = document.getElementById('virtual-controller-overlay');
                 AppState.mobileControlsActive = !AppState.mobileControlsActive;
@@ -937,7 +1068,6 @@
                 showToast(`가상 터치 게임패드가 ${AppState.mobileControlsActive ? '켜졌습니다' : '꺼졌습니다'}.`, 'info');
             });
 
-            // Modal Trigger Buttons
             document.getElementById('btn-open-keymap')?.addEventListener('click', () => {
                 renderKeymapGrid();
                 document.getElementById('modal-keymapping').classList.remove('hidden');
@@ -958,17 +1088,16 @@
                 showToast('키 맵핑 설정이 기본값으로 복원되었습니다.', 'info');
             });
 
-            // Modal Close Buttons
             document.querySelectorAll('.btn-close-modal').forEach(btn => {
                 btn.addEventListener('click', () => {
                     document.getElementById('modal-library').classList.add('hidden');
                     document.getElementById('modal-settings').classList.add('hidden');
                     document.getElementById('modal-keymapping').classList.add('hidden');
+                    document.getElementById('modal-gta-notice').classList.add('hidden');
                     AppState.listeningForKey = null;
                 });
             });
 
-            // Clear Library Button
             document.getElementById('btn-clear-library')?.addEventListener('click', () => {
                 if (!AppState.db) return;
                 const transaction = AppState.db.transaction(['roms'], 'readwrite');
@@ -979,7 +1108,6 @@
                 };
             });
 
-            // Settings Inputs
             const opacitySlider = document.getElementById('setting-pad-opacity');
             if (opacitySlider) {
                 opacitySlider.addEventListener('input', (e) => {
@@ -993,7 +1121,6 @@
                 AppState.vibrationEnabled = e.target.checked;
             });
 
-            // Public Demo ROM Loaders
             document.getElementById('btn-demo-nes')?.addEventListener('click', async () => {
                 showToast('NES 데모 게임 로딩 중...', 'info');
                 try {
@@ -1006,11 +1133,10 @@
             });
 
             document.getElementById('btn-demo-snes')?.addEventListener('click', () => {
-                showToast('상단의 [ROM 파일 불러오기]를 클릭하여 보유하신 SNES (.smc/.sfc) ROM을 선택해 주세요.', 'info');
+                showToast('상단의 [ROM 파일 불러오기]를 클릭하여 ROM을 선택해 주세요.', 'info');
             });
         }
 
-        // Window Initialization Entry Point
         window.onload = async function() {
             await initDB();
             setupVirtualGamepad();
