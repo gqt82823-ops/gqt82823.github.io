@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ko" class="h-full select-none overflow-hidden">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- iOS Web App Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="NintendoRetro">
+    <meta name="theme-color" content="#0f172a">
+
+    <title>닌텐도 멀티 레트로 에뮬레이터</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        .safe-pb { padding-bottom: env(safe-area-inset-bottom, 12px); }
+        .safe-pt { padding-top: env(safe-area-inset-top, 12px); }
+        .safe-pl { padding-left: env(safe-area-inset-left, 12px); }
+        .safe-pr { padding-right: env(safe-area-inset-right, 12px); }
+
+        body, button, select, div {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 9999px;
+        }
+
+        @keyframes pulse-subtle {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.85; transform: scale(0.98); }
+        }
+        .animate-pulse-subtle {
+            animation: pulse-subtle 3s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 h-full flex flex-col justify-between overflow-hidden safe-pt safe-pb safe-pl safe-pr font-sans">
+
+    <!-- Top Header Navigation -->
+    <header class="flex items-center justify-between px-4 py-2.5 bg-slate-900/90 backdrop-blur border-b border-slate-800 z-20 shrink-0">
+        <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-red-600 to-rose-500 flex items-center justify-center shadow-md shadow-red-950/50">
+                <i class="fa-solid fa-gamepad text-white text-base"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-sm sm:text-base tracking-wide bg-gradient-to-r from-red-500 via-rose-400 to-amber-300 bg-clip-text text-transparent">
+                    NINTENDO RETRO
+                </h1>
+                <p class="text-[10px] text-slate-400 -mt-1 hidden sm:block">NES • SNES • GB • GBC • GBA • NDS • N64</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button id="change-game-btn" class="hidden bg-slate-800 hover:bg-slate-700 active:scale-95 text-rose-400 border border-rose-500/30 text-xs px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-folder-open"></i>
+                <span>다른 게임 선택</span>
+            </button>
+            <button id="fullscreen-btn" title="전체화면 토글" class="bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-300 p-2 rounded-xl text-xs border border-slate-700 transition">
+                <i class="fa-solid fa-expand"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main ROM Upload & Emulator Frame -->
+    <main class="flex-1 relative flex flex-col items-center justify-center bg-slate-950 overflow-y-auto p-3 sm:p-6">
+        
+        <!-- Toast Notification -->
+        <div id="toast" class="fixed top-14 bg-slate-800/95 border border-slate-700 text-amber-300 text-xs px-4 py-2.5 rounded-full shadow-2xl z-50 transition-all duration-300 opacity-0 transform -translate-y-4 pointer-events-none flex items-center gap-2">
+            <i class="fa-solid fa-circle-info text-amber-400"></i>
+            <span id="toast-msg">롬 파일을 선택하거나 드래그하여 드롭하세요.</span>
+        </div>
+
+        <!-- ROM Selector UI Box -->
+        <div id="rom-upload-panel" class="w-full max-w-xl flex flex-col gap-4 my-auto">
+            
+            <!-- Drag & Drop Dropzone -->
+            <div id="dropzone" class="border-2 border-dashed border-slate-700 hover:border-red-500/60 bg-slate-900/60 hover:bg-slate-900/90 rounded-3xl p-6 sm:p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200 shadow-xl group">
+                <input type="file" id="rom-file-input" accept=".nes,.snes,.smc,.gb,.gbc,.gba,.agb,.nds,.n64,.z64,.v64,.vb,.zip" class="hidden">
+                
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-red-600/20 to-rose-500/20 border border-red-500/30 flex items-center justify-center text-red-500 mb-4 group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-cloud-arrow-up text-2xl"></i>
+                </div>
+
+                <h2 class="text-base sm:text-lg font-bold text-slate-100 mb-1">
+                    닌텐도 롬 파일 선택
+                </h2>
+                <p class="text-xs text-slate-400 mb-4 max-w-xs leading-relaxed">
+                    여기를 터치하거나 <br class="sm:hidden">파일을 이 영역으로 끌어다 놓으세요.
+                </p>
+
+                <button id="select-file-btn" class="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white font-semibold text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-red-950/40 active:scale-95 transition flex items-center gap-2">
+                    <i class="fa-solid fa-folder-open"></i>
+                    <span>파일 앱 / 기기에서 선택</span>
+                </button>
+            </div>
+
+            <!-- Supported Consoles Info Grid -->
+            <div class="bg-slate-900/40 border border-slate-800/80 rounded-2xl p-4">
+                <h3 class="text-xs font-semibold text-slate-400 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-layer-group text-red-500"></i> 지원되는 닌텐도 기종 & 확장자
+                </h3>
+                
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    <div class="bg-slate-950/60 border border-slate-800 p-2 rounded-xl flex items-center gap-2">
+                        <span class="text-xs font-bold text-red-400">GBA</span>
+                        <span class="text-[10px] text-slate-500 font-mono">.gba</span>
+                    </div>
+                    <div class="bg-slate-950/60 border border-slate-800 p-2 rounded-xl flex items-center gap-2">
+                        <span class="text-xs font-bold text-rose-400">NDS</span>
+                        <span class="text-[10px] text-slate-500 font-mono">.nds</span>
+                    </div>
+                    <div class="bg-slate-950/60 border border-slate-800 p-2 rounded-xl flex items-center gap-2">
+                        <span class="text-xs font-bold text-amber-400">N64</span>
+                        <span class="text-[10px] text-slate-500 font-mono">.n64 / .z64</span>
+                    </div>
+                    <div class="bg-slate-950/60 border border-slate-800 p-2 rounded-xl flex items-center gap-2">
+                        <span class="text-xs font-bold text-emerald-400">SNES</span>
+                        <span class="text-[10px] text-slate-500 font-mono">.snes / .smc</span>
+                    </div>
+                    <div class="bg-slate-950/60 border border-slate-800 p-2 rounded-xl flex items-center gap-2">
+                        <span class="text-xs font-bold text-sky-400">NES</span>
+                        <span class="text-[10px] text-slate-500 font-mono">.nes</span>
+                    </div>
+                    <div class="bg-slate-950/60 border border-slate-800 p-2 rounded-xl flex items-center gap-2">
+                        <span class="text-xs font-bold text-indigo-400">GB / GBC</span>
+                        <span class="text-[10px] text-slate-500 font-mono">.gb / .gbc</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- iOS Home Screen Add Tip Notice -->
+            <div class="bg-slate-900/30 border border-amber-500/20 rounded-2xl p-3.5 flex items-start gap-3">
+                <i class="fa-solid fa-mobile-screen-button text-amber-400 text-base mt-0.5 shrink-0"></i>
+                <div class="text-[11px] text-slate-300 leading-relaxed">
+                    <strong class="text-amber-400 font-semibold block mb-0.5">아이폰(iOS Safari) 전체화면 팁:</strong>
+                    Safari 하단 <i class="fa-solid fa-share-from-square text-amber-300"></i> 버튼 클릭 ➔ <strong class="text-slate-100">'홈 화면에 추가'</strong>를 누르면 주소창 없이 앱처럼 시원한 전체화면으로 실행됩니다.
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Emulator Runner Container -->
+        <div id="game-frame-container" class="w-full h-full hidden rounded-2xl overflow-hidden relative shadow-2xl bg-black"></div>
+    </main>
+
+    <script>
+        // DOM Elements
+        const romUploadPanel = document.getElementById('rom-upload-panel');
+        const gameFrameContainer = document.getElementById('game-frame-container');
+        const romFileInput = document.getElementById('rom-file-input');
+        const selectFileBtn = document.getElementById('select-file-btn');
+        const dropzone = document.getElementById('dropzone');
+        const changeGameBtn = document.getElementById('change-game-btn');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toast-msg');
+
+        // Show Toast Helper
+        function showToast(msg) {
+            toastMsg.innerText = msg;
+            toast.classList.remove('opacity-0', '-translate-y-4', 'pointer-events-none');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', '-translate-y-4', 'pointer-events-none');
+            }, 3500);
+        }
+
+        // Detect Emulator Core based on file extension and binary bytes
+        function detectNintendoCore(bytes, filename = '') {
+            const ext = filename.toLowerCase().split('.').pop();
+            
+            if (ext === 'gba' || ext === 'agb') return 'gba';
+            if (ext === 'nds') return 'nds';
+            if (ext === 'n64' || ext === 'z64' || ext === 'v64') return 'n64';
+            if (ext === 'snes' || ext === 'smc') return 'snes';
+            if (ext === 'nes') return 'nes';
+            if (ext === 'gb') return 'gb';
+            if (ext === 'gbc') return 'gbc';
+            if (ext === 'vb') return 'vb';
+
+            // Check NES Header ("NES\x1A")
+            if (bytes.length > 4 && bytes[0] === 0x4E && bytes[1] === 0x45 && bytes[2] === 0x53 && bytes[3] === 0x1A) {
+                return 'nes';
+            }
+            // Check Game Boy Header
+            if (bytes.length > 0x0104 && bytes[0x0104] === 0xCE && bytes[0x0105] === 0xED) {
+                return 'gb';
+            }
+            
+            // Fallback default
+            return 'gba';
+        }
+
+        // Launch EmulatorJS inside Sandboxed Iframe with ArrayBuffer ROM
+        function launchEmulator(romBuffer, fileName = 'game.gba') {
+            romUploadPanel.classList.add('hidden');
+            gameFrameContainer.classList.remove('hidden');
+            changeGameBtn.classList.remove('hidden');
+            gameFrameContainer.innerHTML = '';
+
+            const iframe = document.createElement('iframe');
+            iframe.style.width = '100%';
+            iframe.style.height = '100%';
+            iframe.style.border = 'none';
+            iframe.allow = 'autoplay; gamepad; fullscreen; microphone';
+
+            gameFrameContainer.appendChild(iframe);
+
+            const blob = new Blob([romBuffer], { type: 'application/octet-stream' });
+            const romUrl = URL.createObjectURL(blob);
+            const core = detectNintendoCore(romBuffer, fileName);
+
+            const iframeDoc = iframe.contentWindow.document;
+            iframeDoc.open();
+            iframeDoc.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+                    <style>
+                        html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
+                        #emulator-holder { width: 100%; height: 100%; }
+                    </style>
+                </head>
+                <body>
+                    <div id="emulator-holder"></div>
+                    <script>
+                        window.EJS_player = '#emulator-holder';
+                        window.EJS_gameUrl = '${romUrl}';
+                        window.EJS_core = '${core}';
+                        window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+                        window.EJS_startOnLoaded = true;
+                    <\/script>
+                    <script src="https://cdn.emulatorjs.org/stable/data/loader.js"><\/script>
+                </body>
+                </html>
+            `);
+            iframeDoc.close();
+
+            const coreNameMap = {
+                'gba': 'Game Boy Advance (GBA)',
+                'nds': 'Nintendo DS (NDS)',
+                'n64': 'Nintendo 64 (N64)',
+                'snes': 'Super Nintendo (SNES)',
+                'nes': 'Nintendo (NES)',
+                'gb': 'Game Boy (GB)',
+                'gbc': 'Game Boy Color (GBC)',
+                'vb': 'Virtual Boy'
+            };
+
+            showToast(`[${coreNameMap[core] || core.toUpperCase()}] 에뮬레이터를 구동합니다.`);
+        }
+
+        // Process Loaded File
+        function handleFile(file) {
+            if (!file) return;
+
+            showToast(`"${file.name}" 로딩 중...`);
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                const arrayBuffer = e.target.result;
+                const uint8Array = new Uint8Array(arrayBuffer);
+                launchEmulator(uint8Array, file.name);
+            };
+
+            reader.onerror = function() {
+                showToast('파일을 읽는 중 오류가 발생했습니다.');
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        // File Selection Click Listeners
+        selectFileBtn.addEventListener('click', () => romFileInput.click());
+        dropzone.addEventListener('click', (e) => {
+            if (e.target !== selectFileBtn && !selectFileBtn.contains(e.target)) {
+                romFileInput.click();
+            }
+        });
+
+        romFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) handleFile(file);
+        });
+
+        // Drag & Drop Handlers
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropzone.classList.add('border-red-500', 'bg-slate-900');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropzone.classList.remove('border-red-500', 'bg-slate-900');
+            }, false);
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files && files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        // Change Game / Return to File Selector Button
+        changeGameBtn.addEventListener('click', () => {
+            gameFrameContainer.innerHTML = '';
+            gameFrameContainer.classList.add('hidden');
+            changeGameBtn.classList.add('hidden');
+            romUploadPanel.classList.remove('hidden');
+            romFileInput.value = '';
+            showToast('새 롬 파일을 선택하세요.');
+        });
+
+        // Fullscreen Toggle Helper
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {
+                    showToast('iOS Safari는 홈 화면 추가 후 실행 시 전체화면이 적용됩니다.');
+                });
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        });
+    </script>
+</body>
+</html>
