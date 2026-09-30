@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ko" class="h-full select-none overflow-hidden">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <!-- iOS Web App Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="RetroMulti">
+    <meta name="theme-color" content="#0f172a">
+
+    <title>아이폰 멀티 레트로 에뮬레이터</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom CSS for Safe Area and Layout -->
+    <style>
+        /* iOS Safe Area Padding */
+        .safe-pb { padding-bottom: env(safe-area-inset-bottom, 12px); }
+        .safe-pt { padding-top: env(safe-area-inset-top, 12px); }
+        .safe-pl { padding-left: env(safe-area-inset-left, 12px); }
+        .safe-pr { padding-right: env(safe-area-inset-right, 12px); }
+
+        /* Disable native touch callouts and selection */
+        body, button, select, div, iframe {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            touch-action: manipulation;
+        }
+
+        /* Fullscreen Game Container */
+        #game-frame-container {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Custom Scrollbar for Dropdown / Modals */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 h-full flex flex-col justify-between overflow-hidden safe-pt safe-pb safe-pl safe-pr">
+
+    <!-- Top Header Navigation -->
+    <header class="flex items-center justify-between px-3 py-2 bg-slate-900/95 backdrop-blur border-b border-slate-800 z-20 gap-2 shrink-0">
+        <div class="flex items-center gap-2 min-w-0">
+            <i class="fa-solid fa-gamepad text-rose-500 text-xl shrink-0"></i>
+            <h1 class="font-bold text-base sm:text-lg tracking-wide bg-gradient-to-r from-rose-500 via-amber-400 to-indigo-400 bg-clip-text text-transparent truncate">
+                RETRO MULTI
+            </h1>
+        </div>
+
+        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <!-- Console Selector Dropdown -->
+            <select id="console-select" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium px-2 py-1.5 rounded-lg border border-slate-700 outline-none cursor-pointer">
+                <option value="auto">자동 감지</option>
+                <option value="nes">NES (패미컴)</option>
+                <option value="snes">SNES (슈퍼패미컴)</option>
+                <option value="gb">Game Boy / Color</option>
+                <option value="gba">Game Boy Advance</option>
+                <option value="nds">Nintendo DS</option>
+                <option value="n64">Nintendo 64</option>
+                <option value="segaMD">Sega Genesis / MD</option>
+                <option value="segaGG">Sega Game Gear</option>
+                <option value="pce">PC Engine</option>
+                <option value="psx">PlayStation 1</option>
+            </select>
+
+            <!-- ROM File Input Button -->
+            <label class="cursor-pointer bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 shadow transition">
+                <i class="fa-solid fa-folder-open"></i>
+                <span class="hidden sm:inline">롬 선택</span>
+                <input type="file" id="rom-input" accept=".nes,.smc,.sfc,.gb,.gbc,.gba,.nds,.z64,.n64,.v64,.md,.smd,.gen,.gg,.sms,.pce,.zip,.7z" class="hidden">
+            </label>
+
+            <!-- Fullscreen / iOS Tip Button -->
+            <button id="fullscreen-btn" title="전체화면" class="bg-slate-800 hover:bg-slate-700 text-slate-300 p-2 rounded-lg text-xs border border-slate-700 transition">
+                <i class="fa-solid fa-expand"></i>
+            </button>
+
+            <!-- Help / Info Button -->
+            <button id="help-btn" title="도움말" class="bg-slate-800 hover:bg-slate-700 text-slate-300 p-2 rounded-lg text-xs border border-slate-700 transition">
+                <i class="fa-solid fa-circle-question"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Game Display Area -->
+    <main class="flex-1 relative flex flex-col items-center justify-center bg-black overflow-hidden">
+        
+        <!-- Toast Notification Banner -->
+        <div id="toast" class="absolute top-3 bg-slate-800/90 border border-slate-700 text-amber-400 text-xs px-4 py-2 rounded-full shadow-xl z-30 transition-all opacity-0 transform -translate-y-4 pointer-events-none flex items-center gap-2">
+            <i class="fa-solid fa-circle-info"></i>
+            <span id="toast-msg">게임 롬 파일(.nes, .sfc, .gb, .gba 등)을 불러오세요.</span>
+        </div>
+
+        <!-- Emulator Container -->
+        <div id="emulator-box" class="w-full h-full relative flex items-center justify-center">
+            
+            <!-- Default Welcome Placeholder when no ROM is loaded -->
+            <div id="rom-placeholder" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-950 p-6 text-center z-10 overflow-y-auto">
+                <div class="w-16 h-16 bg-rose-600/20 text-rose-500 rounded-2xl flex items-center justify-center mb-4 border border-rose-500/30 shadow-lg">
+                    <i class="fa-solid fa-gamepad text-3xl"></i>
+                </div>
+                
+                <h2 class="text-xl font-bold mb-2 text-slate-100">레트로 에뮬레이터 준비됨</h2>
+                <p class="text-xs text-slate-400 max-w-sm mb-6 leading-relaxed">
+                    가지고 계신 롬(.nes, .smc, .sfc, .gb, .gba, .nds, .n64 등) 파일을 열어 자유롭게 플레이하세요. 가상 패드는 자동으로 생성됩니다.
+                </p>
+
+                <!-- Supported System Badges -->
+                <div class="flex flex-wrap justify-center gap-1.5 max-w-md mb-6">
+                    <span class="bg-slate-900 border border-slate-800 text-rose-400 text-[11px] font-semibold px-2.5 py-1 rounded-md">NES</span>
+                    <span class="bg-slate-900 border border-slate-800 text-amber-400 text-[11px] font-semibold px-2.5 py-1 rounded-md">SNES</span>
+                    <span class="bg-slate-900 border border-slate-800 text-emerald-400 text-[11px] font-semibold px-2.5 py-1 rounded-md">Game Boy</span>
+                    <span class="bg-slate-900 border border-slate-800 text-sky-400 text-[11px] font-semibold px-2.5 py-1 rounded-md">GBA</span>
+                    <span class="bg-slate-900 border border-slate-800 text-indigo-400 text-[11px] font-semibold px-2.5 py-1 rounded-md">NDS</span>
+                    <span class="bg-slate-900 border border-slate-800 text-purple-400 text-[11px] font-semibold px-2.5 py-1 rounded-md">N64</span>
+                    <span class="bg-slate-900 border border-slate-800 text-pink-400 text-[11px] font-semibold px-2.5 py-1 rounded-md">Genesis</span>
+                </div>
+
+                <button onclick="document.getElementById('rom-input').click()" class="bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-400 text-white font-bold text-sm px-6 py-3 rounded-xl shadow-lg active:scale-95 transition flex items-center gap-2">
+                    <i class="fa-solid fa-file-arrow-up"></i>
+                    롬 파일 불러오기
+                </button>
+            </div>
+
+            <!-- Active Emulator Wrapper Frame -->
+            <div id="game-frame-container" class="w-full h-full hidden"></div>
+        </div>
+    </main>
+
+    <!-- Help / iOS Guide Modal -->
+    <div id="help-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm p-5 flex flex-col gap-4 text-sm">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-base flex items-center gap-2 text-slate-200">
+                    <i class="fa-solid fa-circle-info text-rose-500"></i> 이용 안내 및 팁
+                </h3>
+                <button id="close-help" class="text-slate-400 hover:text-white text-lg">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- iOS Safari Tip -->
+            <div class="bg-slate-800/60 p-3.5 rounded-xl border border-slate-700/50 text-xs text-slate-300 space-y-1.5">
+                <p class="font-semibold text-amber-400 flex items-center gap-1.5">
+                    <i class="fa-brands fa-apple text-sm"></i> 아이폰 전체화면 앱 등록
+                </p>
+                <p class="text-[11px] text-slate-400 leading-relaxed">
+                    Safari 하단 공유 버튼(<i class="fa-solid fa-share-from-square"></i>)을 클릭한 후 <strong>'홈 화면에 추가'</strong>를 선택하시면 상/하단 주소창이 없는 독립형 에뮬레이터 앱으로 바로 실행됩니다.
+                </p>
+            </div>
+
+            <!-- Multi Controller Tip -->
+            <div class="bg-slate-800/60 p-3.5 rounded-xl border border-slate-700/50 text-xs text-slate-300 space-y-1.5">
+                <p class="font-semibold text-rose-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-gamepad text-sm"></i> 가상 조작패드 & 제어
+                </p>
+                <p class="text-[11px] text-slate-400 leading-relaxed">
+                    게임을 로드하면 에뮬레이터 엔진(EmulatorJS)의 터치 가상패드 및 제어 메뉴(세이브/로드, 옵션)가 화면에 자동으로 나타납니다.
+                </p>
+            </div>
+
+            <button id="confirm-help" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-bold py-2.5 rounded-xl transition mt-1">
+                확인
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // DOM Element References
+        const romInput = document.getElementById('rom-input');
+        const consoleSelect = document.getElementById('console-select');
+        const romPlaceholder = document.getElementById('rom-placeholder');
+        const gameFrameContainer = document.getElementById('game-frame-container');
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toast-msg');
+
+        // File Extension to EmulatorJS Core Mapping
+        const EXTENSION_MAP = {
+            'nes': 'nes',
+            'smc': 'snes',
+            'sfc': 'snes',
+            'fig': 'snes',
+            'gb': 'gb',
+            'gbc': 'gb',
+            'gba': 'gba',
+            'agb': 'gba',
+            'nds': 'nds',
+            'n64': 'n64',
+            'z64': 'n64',
+            'v64': 'n64',
+            'md': 'segaMD',
+            'smd': 'segaMD',
+            'gen': 'segaMD',
+            'gg': 'segaGG',
+            'sms': 'segaMS',
+            'pce': 'pce'
+        };
+
+        // Display Toast Message
+        function showToast(msg) {
+            toastMsg.innerText = msg;
+            toast.classList.remove('opacity-0', '-translate-y-4', 'pointer-events-none');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', '-translate-y-4', 'pointer-events-none');
+            }, 3500);
+        }
+
+        // Determine core based on extension or user manual dropdown
+        function detectCore(fileName) {
+            const selected = consoleSelect.value;
+            if (selected !== 'auto') {
+                return selected;
+            }
+
+            const ext = fileName.split('.').pop().toLowerCase();
+            if (EXTENSION_MAP[ext]) {
+                return EXTENSION_MAP[ext];
+            }
+            // Default fallback core
+            return 'nes';
+        }
+
+        // Handle ROM File Loading with iOS Safari ArrayBuffer optimization
+        romInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const core = detectCore(file.name);
+            showToast(`${file.name} 불러오는 중 (${core.toUpperCase()})...`);
+
+            // Hide placeholder & show frame container
+            romPlaceholder.classList.add('hidden');
+            gameFrameContainer.classList.remove('hidden');
+
+            // Read file as ArrayBuffer to bypass iOS Safari worker blob restrictions
+            const reader = new FileReader();
+
+            reader.onerror = function() {
+                showToast('파일을 읽는데 실패했습니다. 다시 시도해 주세요.');
+            };
+
+            reader.onload = function(evt) {
+                const arrayBuffer = evt.target.result;
+
+                // Clear previous iframe if existing to release memory & audio context cleanly
+                gameFrameContainer.innerHTML = '';
+
+                // Create sandboxed iframe for EmulatorJS isolate runtime
+                const iframe = document.createElement('iframe');
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+                iframe.style.border = 'none';
+                iframe.allow = 'autoplay; gamepad; fullscreen; microphone; clipboard-read; clipboard-write';
+
+                // Insert iframe into DOM before injecting HTML
+                gameFrameContainer.appendChild(iframe);
+
+                const sanitizedFileName = file.name.replace(/['"\\]/g, '');
+
+                // Inject base HTML structure into iframe
+                const iframeDoc = iframe.contentWindow.document;
+                iframeDoc.open();
+                iframeDoc.write(`
+                    <!DOCTYPE html>
+                    <html lang="ko">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+                        <style>
+                            body, html {
+                                margin: 0;
+                                padding: 0;
+                                width: 100%;
+                                height: 100%;
+                                overflow: hidden;
+                                background-color: #000;
+                                -webkit-touch-callout: none;
+                                -webkit-user-select: none;
+                                user-select: none;
+                                touch-action: none;
+                            }
+                            #game {
+                                width: 100%;
+                                height: 100%;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div id="game"></div>
+                    </body>
+                    </html>
+                `);
+                iframeDoc.close();
+
+                // Create Blob inside iframe context to solve cross-origin Blob Worker issue on iOS
+                const blob = new iframe.contentWindow.Blob([arrayBuffer], { type: 'application/octet-stream' });
+                const romBlobUrl = iframe.contentWindow.URL.createObjectURL(blob);
+
+                // Inject EmulatorJS config scripts
+                const scriptConfig = iframeDoc.createElement('script');
+                scriptConfig.textContent = `
+                    window.EJS_player = '#game';
+                    window.EJS_core = '${core}';
+                    window.EJS_gameName = '${sanitizedFileName}';
+                    window.EJS_gameUrl = '${romBlobUrl}';
+                    window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+                    window.EJS_startOnLoaded = true;
+                    window.EJS_color = '#e11d48';
+                    window.EJS_virtualGamepad = true;
+                `;
+                iframeDoc.body.appendChild(scriptConfig);
+
+                const scriptLoader = iframeDoc.createElement('script');
+                scriptLoader.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
+                iframeDoc.body.appendChild(scriptLoader);
+
+                showToast(`${file.name} 구동 시작!`);
+            };
+
+            reader.readAsArrayBuffer(file);
+        });
+
+        // Fullscreen Toggle logic
+        document.getElementById('fullscreen-btn').addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {
+                    showToast('Safari 홈 화면 추가 이용 시 완벽한 전체화면이 제공됩니다.');
+                });
+            } else {
+                if (document.exitFullscreen) document.exitFullscreen();
+            }
+        });
+
+        // Help Modal toggle
+        const helpModal = document.getElementById('help-modal');
+        document.getElementById('help-btn').addEventListener('click', () => {
+            helpModal.classList.remove('hidden');
+        });
+        document.getElementById('close-help').addEventListener('click', () => {
+            helpModal.classList.add('hidden');
+        });
+        document.getElementById('confirm-help').addEventListener('click', () => {
+            helpModal.classList.add('hidden');
+        });
+    </script>
+</body>
+</html>
