@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Retro Web Emulator (EmulatorJS)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        nintendo: {
+                            red: '#E60012',
+                            darkRed: '#99000B',
+                            gray: '#202020',
+                            lightGray: '#2D2D2D',
+                            accent: '#00D1FF'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0f0f13;
+            color: #E2E8F0;
+            overflow-x: hidden;
+        }
+        /* Custom scrollbars */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #181820;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333345;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #E60012;
+        }
+        /* Emulator Viewport styling */
+        #display-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #000000;
+        }
+        #display {
+            width: 100%;
+            height: 100%;
+        }
+        /* Glassmorphic UI overlays */
+        .glass-panel {
+            background: rgba(26, 26, 36, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        /* Dropzone hover */
+        .drag-over {
+            border-color: #E60012 !important;
+            background-color: rgba(230, 0, 18, 0.12) !important;
+        }
+        .sys-btn.active-sys {
+            border-color: rgba(230, 0, 18, 0.9);
+            background-color: rgba(230, 0, 18, 0.15);
+            color: #ffffff;
+            box-shadow: 0 4px 14px rgba(230, 0, 18, 0.25);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans antialiased text-slate-200">
+
+    <header class="glass-panel sticky top-0 z-40 border-b border-slate-800 px-4 py-3 shadow-2xl">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-nintendo-darkRed to-nintendo-red flex items-center justify-center shadow-lg shadow-nintendo-red/30">
+                    <i class="fa-solid font-bold fa-gamepad text-xl text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold leading-tight bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                        Universal Retro Suite <span class="text-xs px-2 py-0.5 rounded bg-nintendo-red/20 text-nintendo-red border border-nintendo-red/30 ml-2 font-mono">EmulatorJS v2.0</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">닌텐도 / 세가 / 소니 / 아타리 등 20+ 멀티 콘솔 웹 에뮬레이터</p>
+                </div>
+            </div>
+
+            <!-- Quick Info / Status -->
+            <div class="hidden sm:flex items-center space-x-4 text-xs font-medium text-slate-400">
+                <span class="flex items-center gap-1.5 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700/50">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span id="status-indicator">대기 중</span>
+                </span>
+                <button id="btn-show-help" class="hover:text-white transition-colors p-2 rounded-lg hover:bg-slate-800" title="조작법 도움말">
+                    <i class="fa-solid fa-circle-question text-base"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+        <!-- Sidebar / Controls Panel -->
+        <div class="lg:col-span-1 space-y-5 flex flex-col">
+            
+            <!-- System Selection Card -->
+            <div class="glass-panel p-5 rounded-2xl shadow-lg border border-slate-800 space-y-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-sm font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-nintendo-red"></i> 에뮬레이터 기종 선택
+                    </h2>
+                    <span id="selected-system-tag" class="text-xs bg-slate-800 text-nintendo-accent font-mono px-2 py-0.5 rounded">GBA</span>
+                </div>
+
+                <!-- Console Brand Category Filter -->
+                <div class="flex border-b border-slate-800 text-xs font-medium space-x-2 pb-2 overflow-x-auto" id="category-tabs">
+                    <button data-cat="nintendo" class="cat-tab px-2.5 py-1 rounded-md bg-nintendo-red text-white">닌텐도</button>
+                    <button data-cat="sega" class="cat-tab px-2.5 py-1 rounded-md text-slate-400 hover:text-white">세가</button>
+                    <button data-cat="sony" class="cat-tab px-2.5 py-1 rounded-md text-slate-400 hover:text-white">소니/기타</button>
+                    <button data-cat="atari" class="cat-tab px-2.5 py-1 rounded-md text-slate-400 hover:text-white">아타리/아케이드</button>
+                </div>
+
+                <!-- Systems Grid -->
+                <div class="grid grid-cols-2 gap-2 max-h-[220px] overflow-y-auto pr-1" id="system-buttons">
+                    
+                    <!-- NINTENDO SYSTEMS -->
+                    <button data-sys="nes" data-cat="nintendo" class="sys-btn p-2 rounded-xl border border-slate-700/60 bg-slate-800/50 hover:bg-slate-700/60 text-xs font-medium flex flex-col items-center gap-1 transition-all">
+                        <i class="fa-solid fa-cube text-slate-400 text-sm"></i>
+                        <span>패미컴 (NES)</span>
+                    </button>
+                    <button data-sys="snes" data-cat="nintendo" class="sys-btn p-2 rounded-xl border border-slate-700/60 bg-slate-800/50 hover:bg-slate-700/60 text-xs font-medium flex flex-col items-center gap-1 transition-all">
+                        <i class="fa-solid fa-square-minus text-slate-400 text-sm"></i>
+                        <span>슈퍼패미컴 (SNES)</span>
+                    </button>
+                    <button data-sys="gb" data-cat="nintendo" class="sys-btn p-2 rounded-xl border border-slate-700/60 bg-slate-800/50 hover:bg-slate-700/60 text-xs font-medium flex flex-col items-center gap-1 transition-all">
+                        <i class="fa-solid fa-mobile-screen-button text-slate-400 text-sm"></i>
+                        <span>게임보이 (GB)</span>
+                    </button>
+                    <button data-sys="gbc" data-cat="nintendo" class="sys-btn p-2 rounded-xl border border-slate-700/60 bg-slate-800/50 hover:bg-slate-700/60 text-xs font-medium flex flex-col items-center gap-1 transition-all">
+                        <i class="fa-solid fa-mobile-retro text-slate-400 text-sm"></i>
+                        <span>GB 컬러 (GBC)</span>
+                    </button>
+                    <button data-sys="gba" data-cat="nintendo" class="sys-btn p-2 rounded-xl border border-nintendo-red/80 bg-nintendo-red/10 text-white text-xs font-medium flex flex-col items-center gap-1 transition-all active-sys">
+                        <i class="fa-solid fa-gamepad text-nintendo-red text-sm"></i>
+                        <span>GB 어드밴스 (GBA)</span>
+                    </button>
+                    <button data-sys="n64" data-cat="nintendo" class="sys-btn p-2 rounded-xl border border-slate-700/60 bg-slate-800/50 hover:bg-slate-700/60 text-xs font-medium flex flex-col items-center gap-1 transition-all">
+                        <i class="fa-solid fa-shapes text-slate-400 text-sm"></i>
+                        <span>닌텐도 64 (N64)</span>
+                    </button>
+                    <button data-sys="nds" data-cat="nintendo" class="sys-btn p-2 rounded-xl border border-slate-700/60 bg-slate-800/50 hover:bg-slate-700/60 text-xs font-medium flex flex-col items-center gap-1 transition-all">
+                        <i class="fa-solid fa-folder-closed text-slate-400 text-sm"></i>
+                        <span>닌텐도 DS (NDS)</span>
+                    </button>
+                    <button data-sys="vb" data-cat="nintendo" class="sys-btn p-2 rounded-xl border border-slate-700/60 bg-slate-800/50 hover:bg-slate-700/60 text-xs font-medium flex flex-col items-center gap-1 transition-all">
+                        <i class="fa-solid fa-vr-cardboard text-slate-400 text-sm"></i>
+                        <span>버추얼 보이</span>
+                    </button>
+
+                    <!-- SEGA SYSTEMS -->
+                    <button data-sys="segaMD" data-cat="sega" class="sys-btn hidden p-2 rounded-xl border border-slate-700/60 bg-slate-800/50 hover:bg-slate-700/60 text-xs font-medium flex flex-col items-center gap-1 transition-all">
+                        <i class="fa-solid fa-compact-disc text-slate-400 text-sm"></i>
+                        <span>메가드라이브 / MD</span>
+                    </button>
+                    <button data-sys="segaMS" data-cat="sega" class="sys-btn hidden p-2 rounded-xl border border-slate-700/60 bg-slate-800/50 hover:bg-slate-700/60 text-xs font-medium flex flex-col items-center gap-1 transition-all">
+                        <i class="fa-solid fa-tv text-slate-400 text-sm"></i>
+                        <span>마스터 시스템</span>
+                    </button>
+                    <button data-sys="segaGG" data-cat="sega" class="sys-btn hidden p-2 rounded-xl border border-slate-700/60 bg-slate-800/50 hover:bg-slate-700/60 text-xs font-medium flex flex-col items-center gap-1 transition-all">
+                        <i class="fa-solid fa-gamepad text-slate-400 text-sm"></i>
+                        <span>게임 기어</span>
+                    </button>
+                    <button data-sys="segaSaturn" data-cat="sega" class="sys-btn hidden p-2 rounded-xl border border-slate-700/60 bg-slate-800/50 hover:bg-slate-700/60 text-xs font-medium flex flex-col items-center gap-1 transition-all">
+                        <i class="fa-solid fa-circle-dot text-slate-400 text-sm"></i>
+                        <span>세가 새턴</span>
+                    </button>
+
+                    <!-- SONY & OTHERS -->
+                    <button data-sys="psx" data-cat="sony" class="sys-btn hidden p-2 rounded-xl border border-slate-700/60 bg-slate-800/50 hover:bg-slate-700/60 text-xs font-medium flex flex-col items-center gap-1 transition-all">
+                        <i class="fa-solid fa-playstation text-slate-400 text-sm"></i>
+                        <span>플레이스테이션 1</span>
+                    </button>
+                    <button data-sys="psp" data-cat="sony" class="sys-btn hidden p-2 rounded-xl border border-slate-700/60 bg-slate-800/50 hover:bg-slate-700/60 text-xs font-medium flex flex-col items-center gap-1 transition-all">
+                        <i class="fa-solid fa-mobile-screen text-slate-400 text-sm"></i>
+                        <span>PSP</span>
+                    </button>
+                    <button data-sys="ws" data-cat="sony" class="sys-btn hidden p-2 rounded-xl border border-slate-700/60 bg-slate-800/50 hover:bg-slate-700/60 text-xs font-medium flex flex-col items-center gap-1 transition-all">
+                        <i class="fa-solid fa-capsules text-slate-400 text-sm"></i>
+                        <span>원더스완 (WS)</span>
+                    </button>
+                    <button data-sys="pce" data-cat="sony" class="sys-btn hidden p-2 rounded-xl border border-slate-700/60 bg-slate-800/50 hover:bg-slate-700/60 text-xs font-medium flex flex-col items-center gap-1 transition-all">
+                        <i class="fa-solid fa-memory text-slate-400 text-sm"></i>
+                        <span>PC 엔진 (PCE)</span>
+                    </button>
+
+                    <!-- ATARI & ARCADE -->
+                    <button data-sys="atari2600" data-cat="atari" class="sys-btn hidden p-2 rounded-xl border border-slate-700/60 bg-slate-800/50 hover:bg-slate-700/60 text-xs font-medium flex flex-col items-center gap-1 transition-all">
+                        <i class="fa-solid fa-joystick text-slate-400 text-sm"></i>
+                        <span>아타리 2600</span>
+                    </button>
+                    <button data-sys="atari7800" data-cat="atari" class="sys-btn hidden p-2 rounded-xl border border-slate-700/60 bg-slate-800/50 hover:bg-slate-700/60 text-xs font-medium flex flex-col items-center gap-1 transition-all">
+                        <i class="fa-solid fa-gamepad text-slate-400 text-sm"></i>
+                        <span>아타리 7800</span>
+                    </button>
+                    <button data-sys="ngp" data-cat="atari" class="sys-btn hidden p-2 rounded-xl border border-slate-700/60 bg-slate-800/50 hover:bg-slate-700/60 text-xs font-medium flex flex-col items-center gap-1 transition-all">
+                        <i class="fa-solid fa-coins text-slate-400 text-sm"></i>
+                        <span>네오지오 포켓</span>
+                    </button>
+                    <button data-sys="arcade" data-cat="atari" class="sys-btn hidden p-2 rounded-xl border border-slate-700/60 bg-slate-800/50 hover:bg-slate-700/60 text-xs font-medium flex flex-col items-center gap-1 transition-all">
+                        <i class="fa-solid fa-headset text-slate-400 text-sm"></i>
+                        <span>아케이드 (MAME)</span>
+                    </button>
+
+                </div>
+            </div>
+
+            <div id="drop-zone" class="glass-panel p-5 rounded-2xl border-2 border-dashed border-slate-700 hover:border-slate-500 transition-all flex flex-col items-center justify-center text-center cursor-pointer group space-y-2 relative overflow-hidden">
+                <input type="file" id="rom-input" class="absolute inset-0 opacity-0 cursor-pointer z-10" accept=".nes,.smc,.sfc,.gb,.gbc,.gba,.z64,.n64,.nds,.bin,.md,.gen,.gg,.sms,.iso,.pbp,.cso,.a26,.a78,.ngp,.zip">
+                
+                <div class="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center group-hover:scale-110 group-hover:bg-nintendo-red/20 transition-all">
+                    <i class="fa-solid fa-cloud-arrow-up text-slate-400 group-hover:text-nintendo-red text-lg transition-colors"></i>
+                </div>
+                <div>
+                    <p class="text-xs font-medium text-slate-200">ROM 파일 선택 또는 드래그</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5">모든 콘솔 롬확장자 및 .zip 압축파일 지원</p>
+                </div>
+                <span id="loaded-file-name" class="text-xs text-nintendo-accent font-mono truncate max-w-[200px] hidden">선택된 파일 없음</span>
+            </div>
+
+            <!-- Launch Button -->
+            <button id="btn-start-emulator" class="w-full py-3 px-4 bg-gradient-to-r from-nintendo-red to-rose-600 hover:from-rose-600 hover:to-nintendo-red text-white font-bold rounded-xl shadow-lg shadow-nintendo-red/30 hover:shadow-nintendo-red/50 active:scale-[0.98] transition-all flex items-center justify-center gap-2 text-sm">
+                <i class="fa-solid fa-play"></i> 게임 에뮬레이터 실행
+            </button>
+
+            <!-- Quick Instructions Box -->
+            <div class="glass-panel p-4 rounded-2xl border border-slate-800 text-xs space-y-2 text-slate-400">
+                <div class="font-semibold text-slate-300 flex items-center gap-1.5 mb-1">
+                    <i class="fa-solid fa-circle-info text-nintendo-accent"></i> 이용 안내 및 팁
+                </div>
+                <ul class="list-disc list-inside space-y-1 text-[11px]">
+                    <li>파일을 올리면 기종 확장자가 자동으로 감지됩니다.</li>
+                    <li>게임 구동 후 하단 설정 메뉴에서 세이브/로드가 가능합니다.</li>
+                    <li>USB/블루투스 게임패드가 연결되면 자동 인식됩니다.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="lg:col-span-3 flex flex-col h-[550px] lg:h-auto min-h-[500px]">
+            <div class="glass-panel flex-1 rounded-2xl border border-slate-800 overflow-hidden flex flex-col relative shadow-2xl">
+                
+                <!-- Screen Header / Bar -->
+                <div class="bg-slate-900/90 border-b border-slate-800 px-4 py-2.5 flex items-center justify-between z-10">
+                    <div class="flex items-center gap-2">
+                        <div class="w-3 h-3 rounded-full bg-rose-500/80"></div>
+                        <div class="w-3 h-3 rounded-full bg-amber-500/80"></div>
+                        <div class="w-3 h-3 rounded-full bg-emerald-500/80"></div>
+                        <span id="current-game-title" class="ml-2 text-xs font-mono text-slate-400 truncate max-w-[200px] sm:max-w-md">게임 미구동</span>
+                    </div>
+
+                    <!-- Screen Action Controls -->
+                    <div class="flex items-center gap-2">
+                        <button id="btn-fullscreen" class="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors" title="전체화면">
+                            <i class="fa-solid fa-expand text-sm"></i>
+                        </button>
+                        <button id="btn-restart" class="p-1.5 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors" title="재시작">
+                            <i class="fa-solid fa-rotate-right text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Emulator Container -->
+                <div id="display-wrapper" class="flex-1 relative">
+                    
+                    <!-- Welcome / Idle Placeholder Screen -->
+                    <div id="placeholder-screen" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center space-y-4 z-10 bg-slate-950/90">
+                        <div class="w-20 h-20 rounded-3xl bg-slate-900 border border-slate-800 flex items-center justify-center text-4xl text-slate-600 shadow-inner">
+                            <i class="fa-solid fa-gamepad"></i>
+                        </div>
+                        <div class="max-w-md">
+                            <h3 class="text-lg font-bold text-slate-200">멀티 레트로 ROM 준비</h3>
+                            <p class="text-xs text-slate-400 mt-1">좌측 메뉴에서 플레이할 기종을 선택하고 보유하고 계신 ROM 파일(.nes, .gba, .nds, .md, .iso 등)을 등록한 뒤 구동 버튼을 클릭하세요.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-1.5 justify-center pt-2 max-w-lg">
+                            <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-[10px] text-slate-400 font-mono">NES/SNES</span>
+                            <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-[10px] text-slate-400 font-mono">GB/GBC/GBA</span>
+                            <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-[10px] text-slate-400 font-mono">N64/NDS</span>
+                            <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-[10px] text-slate-400 font-mono">SEGA MD/GG</span>
+                            <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-[10px] text-slate-400 font-mono">PSX/PSP</span>
+                            <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-[10px] text-slate-400 font-mono">ATARI/MAME</span>
+                        </div>
+                    </div>
+
+                    <!-- EmulatorJS Embed Target Element -->
+                    <div id="display" class="w-full h-full"></div>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <div id="help-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-panel max-w-lg w-full rounded-2xl border border-slate-800 p-6 space-y-5 shadow-2xl relative">
+            <button id="btn-close-modal" class="absolute top-4 right-4 text-slate-400 hover:text-white text-lg">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="flex items-center gap-3 border-b border-slate-800 pb-3">
+                <i class="fa-solid fa-keyboard text-nintendo-red text-xl"></i>
+                <h3 class="text-base font-bold text-white">키보드 기본 조작 가이드</h3>
+            </div>
+            
+            <div class="space-y-3 text-xs">
+                <div class="grid grid-cols-2 gap-2 bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                    <span class="text-slate-400">방향키 (D-Pad)</span>
+                    <span class="font-mono text-slate-200">화살표 키 (↑ ↓ ← →)</span>
+                    <span class="text-slate-400">A / X 버튼</span>
+                    <span class="font-mono text-slate-200">X / Z 키</span>
+                    <span class="text-slate-400">B / Y 버튼</span>
+                    <span class="font-mono text-slate-200">S / A 키</span>
+                    <span class="text-slate-400">L / R 트리거</span>
+                    <span class="font-mono text-slate-200">Q / W 키</span>
+                    <span class="text-slate-400">SELECT</span>
+                    <span class="font-mono text-slate-200">Shift</span>
+                    <span class="text-slate-400">START</span>
+                    <span class="font-mono text-slate-200">Enter</span>
+                </div>
+                <p class="text-slate-400 leading-relaxed text-[11px]">
+                    * 게임 구동 후 에뮬레이터 하단 톱니바퀴 아이콘을 눌러 원하는 키 세팅 및 외부 패드 커스텀 매핑이 가능합니다.
+                </p>
+            </div>
+            
+            <button id="btn-modal-ok" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-xl transition-colors">
+                확인
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let selectedSystem = 'gba';
+        let currentRomFile = null;
+        let romObjectUrl = null;
+
+        const systemButtons = document.querySelectorAll('.sys-btn');
+        const categoryTabs = document.querySelectorAll('.cat-tab');
+        const selectedSystemTag = document.getElementById('selected-system-tag');
+        const romInput = document.getElementById('rom-input');
+        const dropZone = document.getElementById('drop-zone');
+        const loadedFileName = document.getElementById('loaded-file-name');
+        const btnStart = document.getElementById('btn-start-emulator');
+        const placeholderScreen = document.getElementById('placeholder-screen');
+        const currentGameTitle = document.getElementById('current-game-title');
+        const statusIndicator = document.getElementById('status-indicator');
+        const btnFullscreen = document.getElementById('btn-fullscreen');
+        const btnRestart = document.getElementById('btn-restart');
+        const helpModal = document.getElementById('help-modal');
+        const btnShowHelp = document.getElementById('btn-show-help');
+        const btnCloseModal = document.getElementById('btn-close-modal');
+        const btnModalOk = document.getElementById('btn-modal-ok');
+
+        // Category Tab Switcher
+        categoryTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                categoryTabs.forEach(t => {
+                    t.classList.remove('bg-nintendo-red', 'text-white');
+                    t.classList.add('text-slate-400');
+                });
+                tab.classList.add('bg-nintendo-red', 'text-white');
+                tab.classList.remove('text-slate-400');
+
+                const targetCat = tab.dataset.cat;
+                systemButtons.forEach(btn => {
+                    if (btn.dataset.cat === targetCat) {
+                        btn.classList.remove('hidden');
+                    } else {
+                        btn.classList.add('hidden');
+                    }
+                });
+            });
+        });
+
+        // System Selection Handler
+        systemButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                systemButtons.forEach(b => {
+                    b.classList.remove('active-sys');
+                    const icon = b.querySelector('i');
+                    if(icon) icon.classList.replace('text-nintendo-red', 'text-slate-400');
+                });
+
+                btn.classList.add('active-sys');
+                const icon = btn.querySelector('i');
+                if(icon) icon.classList.replace('text-slate-400', 'text-nintendo-red');
+
+                selectedSystem = btn.dataset.sys;
+                selectedSystemTag.textContent = selectedSystem.toUpperCase();
+            });
+        });
+
+        // Drag & Drop File Upload
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.add('drag-over');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                dropZone.classList.remove('drag-over');
+            }, false);
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length > 0) {
+                handleFileSelect(files[0]);
+            }
+        });
+
+        romInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        // File Detection and System Auto Switch
+        function handleFileSelect(file) {
+            currentRomFile = file;
+            loadedFileName.textContent = file.name;
+            loadedFileName.classList.remove('hidden');
+
+            const ext = file.name.split('.').pop().toLowerCase();
+            const extMap = {
+                'nes': { sys: 'nes', cat: 'nintendo' },
+                'smc': { sys: 'snes', cat: 'nintendo' }, 'sfc': { sys: 'snes', cat: 'nintendo' },
+                'gb': { sys: 'gb', cat: 'nintendo' },
+                'gbc': { sys: 'gbc', cat: 'nintendo' },
+                'gba': { sys: 'gba', cat: 'nintendo' },
+                'z64': { sys: 'n64', cat: 'nintendo' }, 'n64': { sys: 'n64', cat: 'nintendo' },
+                'nds': { sys: 'nds', cat: 'nintendo' },
+                'md': { sys: 'segaMD', cat: 'sega' }, 'gen': { sys: 'segaMD', cat: 'sega' },
+                'sms': { sys: 'segaMS', cat: 'sega' },
+                'gg': { sys: 'segaGG', cat: 'sega' },
+                'iso': { sys: 'psx', cat: 'sony' }, 'pbp': { sys: 'psp', cat: 'sony' }, 'cso': { sys: 'psp', cat: 'sony' },
+                'a26': { sys: 'atari2600', cat: 'atari' }, 'a78': { sys: 'atari7800', cat: 'atari' },
+                'ngp': { sys: 'ngp', cat: 'atari' }
+            };
+
+            if (extMap[ext]) {
+                const targetCatBtn = document.querySelector(`.cat-tab[data-cat="${extMap[ext].cat}"]`);
+                if (targetCatBtn) targetCatBtn.click();
+
+                const targetSysBtn = document.querySelector(`.sys-btn[data-sys="${extMap[ext].sys}"]`);
+                if (targetSysBtn) targetSysBtn.click();
+            }
+        }
+
+        // Launch Emulator Action
+        btnStart.addEventListener('click', () => {
+            if (!currentRomFile) {
+                alert('ROM 파일을 먼저 선택해 주세요.');
+                return;
+            }
+
+            if (romObjectUrl) {
+                URL.revokeObjectURL(romObjectUrl);
+            }
+
+            romObjectUrl = URL.createObjectURL(currentRomFile);
+
+            placeholderScreen.classList.add('hidden');
+            currentGameTitle.textContent = `${currentRomFile.name} (${selectedSystem.toUpperCase()})`;
+            statusIndicator.textContent = '구동 중';
+
+            const displayWrapper = document.getElementById('display-wrapper');
+            const oldDisplay = document.getElementById('display');
+            if (oldDisplay) oldDisplay.remove();
+
+            const newDisplay = document.createElement('div');
+            newDisplay.id = 'display';
+            displayWrapper.appendChild(newDisplay);
+
+            // EmulatorJS Engine Global Configuration
+            window.EJS_player = '#display';
+            window.EJS_core = selectedSystem;
+            window.EJS_gameUrl = romObjectUrl;
+            window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+            window.EJS_startOnLoaded = true;
+
+            const oldScript = document.getElementById('emulatorjs-loader');
+            if (oldScript) oldScript.remove();
+
+            const script = document.createElement('script');
+            script.id = 'emulatorjs-loader';
+            script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
+            document.body.appendChild(script);
+        });
+
+        btnFullscreen.addEventListener('click', () => {
+            const wrapper = document.getElementById('display-wrapper');
+            if (!document.fullscreenElement) {
+                if (wrapper.requestFullscreen) {
+                    wrapper.requestFullscreen();
+                } else if (wrapper.webkitRequestFullscreen) {
+                    wrapper.webkitRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        });
+
+        btnRestart.addEventListener('click', () => {
+            if (currentRomFile) {
+                btnStart.click();
+            }
+        });
+
+        const toggleHelpModal = (show) => {
+            if (show) {
+                helpModal.classList.remove('hidden');
+            } else {
+                helpModal.classList.add('hidden');
+            }
+        };
+
+        btnShowHelp.addEventListener('click', () => toggleHelpModal(true));
+        btnCloseModal.addEventListener('click', () => toggleHelpModal(false));
+        btnModalOk.addEventListener('click', () => toggleHelpModal(false));
+        helpModal.addEventListener('click', (e) => {
+            if (e.target === helpModal) toggleHelpModal(false);
+        });
+    </script>
+</body>
+</html>
